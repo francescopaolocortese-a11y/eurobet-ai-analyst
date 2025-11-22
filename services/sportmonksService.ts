@@ -1,6 +1,6 @@
 import { Match, MatchStats } from '../types';
 
-export const API_TOKEN = process.env.SPORTMONKS_API_TOKEN || ''; 
+export const API_TOKEN = import.meta.env.VITE_SPORTMONKS_API_TOKEN || process.env.SPORTMONKS_API_TOKEN || ''; 
 const BASE_URL = 'https://api.sportmonks.com/v3/football';
 
 export const isApiConfigured = () => API_TOKEN.length > 0;

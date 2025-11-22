@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Match, AnalysisData, MatchStats } from "../types";
 
 // Get API Key from environment
-const API_KEY = process.env.API_KEY || '';
+const API_KEY = import.meta.env.VITE_API_KEY || process.env.API_KEY || '';
 
 // Initialize the Gemini client only if API key exists
 const ai = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;

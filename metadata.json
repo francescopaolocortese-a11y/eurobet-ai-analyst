@@ -1,0 +1,5 @@
+{
+  "name": "EuroBet AI Analyst",
+  "description": "Analisi scommesse calcio avanzata con Gemini Search Grounding per campionati europei.",
+  "requestFramePermissions": []
+}

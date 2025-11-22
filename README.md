@@ -26,7 +26,7 @@ Combina la potenza di **Google Gemini 2.5** con i dati statistici in tempo reale
 
 1. Clona il repository:
    ```bash
-   git clone https://github.com/TUO_USERNAME/eurobet-ai.git
+   git clone https://github.com/francescopaolocortese-a11y/eurobet-ai.git
    ```
 2. Entra nella cartella:
    ```bash

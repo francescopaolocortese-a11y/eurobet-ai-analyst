@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY),
+      'process.env.FOOTBALL_API_KEY': JSON.stringify(env.FOOTBALL_API_KEY || process.env.FOOTBALL_API_KEY),
+      'process.env.SPORTMONKS_API_TOKEN': JSON.stringify(env.SPORTMONKS_API_TOKEN || process.env.SPORTMONKS_API_TOKEN),
     },
   };
 });

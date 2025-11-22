@@ -1,7 +1,7 @@
 import { Match, MatchStats } from '../types';
 
-// INSERISCI QUI LA TUA API KEY DI API-FOOTBALL (v3.football.api-sports.io)
-export const API_KEY = '2ddd2e395907e749f5edfff7f4886204'; 
+// API Key from environment variables
+export const API_KEY = process.env.FOOTBALL_API_KEY || ''; 
 
 const BASE_URL = 'https://v3.football.api-sports.io';
 

@@ -1,8 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Match, AnalysisData, MatchStats } from "../types";
 
-// Initialize the Gemini client
-const ai = new GoogleGenerativeAI(process.env.API_KEY || '');
+// Get API Key from environment
+const API_KEY = process.env.API_KEY || '';
+
+// Initialize the Gemini client only if API key exists
+const ai = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 interface ParsedData {
   score: string;
@@ -61,22 +64,26 @@ const getMockLogo = (teamName: string) =>
 
 export const fetchUpcomingMatches = async (): Promise<Match[]> => {
   try {
+    if (!ai) {
+      throw new Error("Gemini API not configured");
+    }
+
     const model = 'gemini-2.5-flash';
-    
+
     // Prompt to find real matches
     const prompt = `
       Trova 6 partite di calcio importanti che si giocano OGGI o DOMANI nei principali campionati europei (Serie A, Premier League, Liga, Bundesliga, Champions League).
       Usa Google Search per verificare orari e squadre.
-      
+
       IMPORTANTE: Riporta gli orari nel fuso orario di ROMA/ITALIA (CET/CEST).
-      
+
       Restituisci SOLO una lista formattata esattamente così per ogni partita (una per riga):
       LEAGUE|HOME_TEAM|AWAY_TEAM|TIME_HH:MM
-      
+
       Esempio:
       Serie A|Juventus|Milan|20:45
       Premier League|Arsenal|Chelsea|18:30
-      
+
       Non aggiungere altro testo prima o dopo.
     `;
 
@@ -194,6 +201,10 @@ export const analyzeMatch = async (match: Match, isLive: boolean = false, stats?
     PROBS: {home_win_percent}|{draw_percent}|{away_win_percent}
     $$END_BLOCK$$
   `;
+
+  if (!ai) {
+    throw new Error("Gemini API not configured");
+  }
 
   const model_instance = ai.getGenerativeModel({ model });
 

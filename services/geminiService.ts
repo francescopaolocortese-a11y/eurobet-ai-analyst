@@ -1,11 +1,23 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Match, AnalysisData, MatchStats } from "../types";
 
-// Get API Key from environment
-const API_KEY = import.meta.env.VITE_API_KEY || process.env.API_KEY || '';
+// Use serverless function to bypass CORS and keep API key secure
+const API_BASE = '/api/gemini';
 
-// Initialize the Gemini client only if API key exists
-const ai = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+// Helper function to call the serverless API
+const callGeminiAPI = async (prompt: string): Promise<string> => {
+  const response = await fetch(API_BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt })
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to call Gemini API');
+  }
+
+  const data = await response.json();
+  return data.text;
+};
 
 interface ParsedData {
   score: string;
@@ -64,12 +76,6 @@ const getMockLogo = (teamName: string) =>
 
 export const fetchUpcomingMatches = async (): Promise<Match[]> => {
   try {
-    if (!ai) {
-      throw new Error("Gemini API not configured");
-    }
-
-    const model = 'gemini-2.5-flash';
-
     // Prompt to find real matches
     const prompt = `
       Trova 6 partite di calcio importanti che si giocano OGGI o DOMANI nei principali campionati europei (Serie A, Premier League, Liga, Bundesliga, Champions League).
@@ -87,14 +93,7 @@ export const fetchUpcomingMatches = async (): Promise<Match[]> => {
       Non aggiungere altro testo prima o dopo.
     `;
 
-    const model_instance = ai.getGenerativeModel({
-      model,
-      generationConfig: { temperature: 0.3 }
-    });
-
-    const result = await model_instance.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = await callGeminiAPI(prompt);
     const lines = text.split('\n').filter(l => l.includes('|'));
     
     const matches: Match[] = lines.map((line, index) => {
@@ -151,7 +150,6 @@ export const fetchUpcomingMatches = async (): Promise<Match[]> => {
 };
 
 export const analyzeMatch = async (match: Match, isLive: boolean = false, stats?: MatchStats): Promise<AnalysisData> => {
-  const model = 'gemini-2.5-flash';
   const context = isLive ? "LIVE (partita in corso)" : "PRE-PARTITA";
   
   let statsPrompt = "";
@@ -202,15 +200,7 @@ export const analyzeMatch = async (match: Match, isLive: boolean = false, stats?
     $$END_BLOCK$$
   `;
 
-  if (!ai) {
-    throw new Error("Gemini API not configured");
-  }
-
-  const model_instance = ai.getGenerativeModel({ model });
-
-  const result = await model_instance.generateContent(prompt);
-  const response = await result.response;
-  const text = response.text();
+  const text = await callGeminiAPI(prompt);
   const { cleanText, parsed } = parseAnalysisResponse(text);
 
   // Extract grounding metadata if available

@@ -1,8 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Match, AnalysisData, MatchStats } from "../types";
 
 // Initialize the Gemini client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenerativeAI(process.env.API_KEY || '');
 
 interface ParsedData {
   score: string;
@@ -80,16 +80,14 @@ export const fetchUpcomingMatches = async (): Promise<Match[]> => {
       Non aggiungere altro testo prima o dopo.
     `;
 
-    const response = await ai.models.generateContent({
+    const model_instance = ai.getGenerativeModel({
       model,
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
-        temperature: 0.3, 
-      },
+      generationConfig: { temperature: 0.3 }
     });
 
-    const text = response.text || "";
+    const result = await model_instance.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
     const lines = text.split('\n').filter(l => l.includes('|'));
     
     const matches: Match[] = lines.map((line, index) => {
@@ -197,22 +195,15 @@ export const analyzeMatch = async (match: Match, isLive: boolean = false, stats?
     $$END_BLOCK$$
   `;
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: prompt,
-    config: {
-      tools: [{ googleSearch: {} }],
-    },
-  });
+  const model_instance = ai.getGenerativeModel({ model });
 
-  const text = response.text || "Analisi non disponibile al momento.";
+  const result = await model_instance.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text();
   const { cleanText, parsed } = parseAnalysisResponse(text);
-  
-  // Extract grounding metadata
-  const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  const urls = chunks
-    .filter(c => c.web?.uri && c.web?.title)
-    .map(c => ({ title: c.web!.title!, uri: c.web!.uri! }));
+
+  // Extract grounding metadata if available
+  const urls: Array<{title: string, uri: string}> = [];
 
   return {
     matchId: match.id,

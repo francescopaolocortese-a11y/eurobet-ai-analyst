@@ -75,49 +75,15 @@ const getMockLogo = (teamName: string) =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName)}&background=random&color=fff&size=128&bold=true`;
 
 export const fetchUpcomingMatches = async (): Promise<Match[]> => {
+  // Return demo data immediately for now
+  console.log("fetchUpcomingMatches called - returning demo data");
+
   try {
-    // Prompt to find real matches
-    const prompt = `
-      Trova 6 partite di calcio importanti che si giocano OGGI o DOMANI nei principali campionati europei (Serie A, Premier League, Liga, Bundesliga, Champions League).
-      Usa Google Search per verificare orari e squadre.
-
-      IMPORTANTE: Riporta gli orari nel fuso orario di ROMA/ITALIA (CET/CEST).
-
-      Restituisci SOLO una lista formattata esattamente così per ogni partita (una per riga):
-      LEAGUE|HOME_TEAM|AWAY_TEAM|TIME_HH:MM
-
-      Esempio:
-      Serie A|Juventus|Milan|20:45
-      Premier League|Arsenal|Chelsea|18:30
-
-      Non aggiungere altro testo prima o dopo.
-    `;
-
-    const text = await callGeminiAPI(prompt);
-    const lines = text.split('\n').filter(l => l.includes('|'));
-    
-    const matches: Match[] = lines.map((line, index) => {
-      const [league, home, away, time] = line.split('|').map(s => s.trim());
-      return {
-        id: `match-${index}-${Date.now()}`,
-        league: league || "Unknown League",
-        homeTeam: home || "Team A",
-        awayTeam: away || "Team B",
-        homeTeamLogo: getMockLogo(home || "A"),
-        awayTeamLogo: getMockLogo(away || "B"),
-        time: time || "TBD",
-        status: 'scheduled'
-      };
-    });
-
-    // If we got a valid list, return it
-    if (matches.length > 0) {
-        return matches;
-    }
-    throw new Error("No matches parsed");
+    // Skipping Gemini call for now, go straight to demo data
+    throw new Error("Returning demo data");
 
   } catch (error) {
-    console.error("Error fetching matches, using fallback:", error);
+    console.log("Showing demo data:", error);
     // Fallback data with Mock Logos and Mock xG so the UI looks complete and features are visible
     return [
       { 

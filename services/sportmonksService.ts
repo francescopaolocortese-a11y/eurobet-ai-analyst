@@ -16,30 +16,34 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
   try {
     // DEBUG: First, discover all available leagues with their IDs
     console.log('🔍 Fetching all available leagues...');
-    const leaguesResponse = await fetch(`${API_BASE}?endpoint=leagues&includes=country`);
-    const leaguesData = await leaguesResponse.json();
 
-    const allLeaguesMap = new Map<number, { name: string; country: string }>();
-    if (leaguesData.data && Array.isArray(leaguesData.data)) {
-      leaguesData.data.forEach((league: any) => {
-        allLeaguesMap.set(league.id, {
-          name: league.name || 'Unknown',
-          country: league.country?.name || 'N/A'
-        });
-      });
+    try {
+      const leaguesResponse = await fetch(`${API_BASE}?endpoint=leagues&includes=country`);
+      console.log('Leagues response status:', leaguesResponse.status);
 
-      // Filter for important European leagues
-      const importantLeagues = leaguesData.data.filter((league: any) => {
-        const name = league.name || '';
-        return ['Serie A', 'Premier League', 'La Liga', 'Bundesliga', 'Ligue 1', 'Champions League', 'Europa League', 'Conference League', 'Eredivisie', 'Liga Portugal', 'Championship']
-          .some(keyword => name.includes(keyword));
-      });
+      if (!leaguesResponse.ok) {
+        const errorText = await leaguesResponse.text();
+        console.error('❌ Leagues API error:', errorText);
+      } else {
+        const leaguesData = await leaguesResponse.json();
 
-      console.log('🏆 IMPORTANT LEAGUES WITH IDS:');
-      importantLeagues.forEach((l: any) => {
-        console.log(`   - ID: ${l.id} | ${l.name} (${l.country?.name || 'N/A'})`);
-      });
-      console.log(`📊 Total leagues available: ${leaguesData.data.length}`);
+        if (leaguesData.data && Array.isArray(leaguesData.data)) {
+          // Filter for important European leagues
+          const importantLeagues = leaguesData.data.filter((league: any) => {
+            const name = league.name || '';
+            return ['Serie A', 'Premier League', 'La Liga', 'Bundesliga', 'Ligue 1', 'Champions League', 'Europa League', 'Conference League', 'Eredivisie', 'Liga Portugal', 'Championship']
+              .some(keyword => name.includes(keyword));
+          });
+
+          console.log('🏆 IMPORTANT LEAGUES WITH IDS:');
+          importantLeagues.forEach((l: any) => {
+            console.log(`   - ID: ${l.id} | ${l.name} (${l.country?.name || 'N/A'})`);
+          });
+          console.log(`📊 Total leagues available: ${leaguesData.data.length}`);
+        }
+      }
+    } catch (leagueError) {
+      console.error('⚠️ Failed to fetch leagues (continuing anyway):', leagueError);
     }
 
     // Now fetch fixtures
@@ -54,7 +58,16 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     // Include participants (teams), league+country, scores, state (status), and STATISTICS (for xG)
     const includes = 'participants;league.country;scores;state;statistics';
 
+    console.log(`📡 Fetching fixtures from: ${endpoint}`);
     const response = await fetch(`${API_BASE}?endpoint=${endpoint}&includes=${includes}`);
+    console.log('Fixtures response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Fixtures API error:', errorText);
+      return [];
+    }
+
     const data = await response.json();
 
     if (!data.data) {

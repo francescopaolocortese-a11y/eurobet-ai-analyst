@@ -18,8 +18,11 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     if (live) {
       endpoint = 'livescores';
     } else {
-      // Use today's date for fixtures
-      endpoint = `fixtures/date/${getFormattedDate(new Date())}`;
+      // Fetch fixtures for the next 30 days to ensure we get domestic leagues
+      const today = new Date();
+      const nextMonth = new Date();
+      nextMonth.setDate(today.getDate() + 30);
+      endpoint = `fixtures/between/${getFormattedDate(today)}/${getFormattedDate(nextMonth)}`;
     }
 
     // Include participants (teams), league+country, scores, state (status), and STATISTICS (for xG)

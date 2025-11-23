@@ -1,9 +1,9 @@
 import { Match, MatchStats, NativePrediction, NativeOdds } from '../types';
 
-export const API_TOKEN = 'Qdd3UsNVF9IuJCR3j1JMhOXgQ2xSsGU8N9jdUgd1hzMFXzI7j9OZ3HtE43pA';
-const BASE_URL = 'https://api.sportmonks.com/v3/football';
+// Use serverless function to bypass CORS
+const API_BASE = '/api/sportmonks';
 
-export const isApiConfigured = () => API_TOKEN.length > 0;
+export const isApiConfigured = () => true; // Always true since serverless function handles the API token
 
 // Helper to format date YYYY-MM-DD
 const getFormattedDate = (date: Date) => {
@@ -20,7 +20,7 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     // IMPORTANT: 'league.country' is needed to filter by region
     const includes = 'participants;league.country;scores;state;statistics';
 
-    const response = await fetch(`${BASE_URL}/${endpoint}?api_token=${API_TOKEN}&include=${includes}`);
+    const response = await fetch(`${API_BASE}?endpoint=${endpoint}&includes=${includes}`);
     const data = await response.json();
 
     if (!data.data) return [];
@@ -124,7 +124,7 @@ export const getMatchStatistics = async (fixtureId: string): Promise<MatchStats 
 
   try {
     // UPDATED: Include predictions and odds for the native components
-    const response = await fetch(`${BASE_URL}/fixtures/${fixtureId}?api_token=${API_TOKEN}&include=statistics;participants;predictions;odds`);
+    const response = await fetch(`${API_BASE}?endpoint=fixtures/${fixtureId}&includes=statistics;participants;predictions;odds`);
     const data = await response.json();
 
     if (!data.data) return undefined;

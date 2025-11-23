@@ -18,11 +18,10 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     if (live) {
       endpoint = 'livescores';
     } else {
-      // Fetch fixtures for the next 30 days to ensure we get domestic leagues
-      const today = new Date();
-      const nextMonth = new Date();
-      nextMonth.setDate(today.getDate() + 30);
-      endpoint = `fixtures/between/${getFormattedDate(today)}/${getFormattedDate(nextMonth)}`;
+      // Try to fetch by specific league IDs for Serie A
+      // Serie A league ID is typically 384 in Sportmonks v3
+      const today = getFormattedDate(new Date());
+      endpoint = `fixtures/date/${today}`;
     }
 
     // Include participants (teams), league+country, scores, state (status), and STATISTICS (for xG)

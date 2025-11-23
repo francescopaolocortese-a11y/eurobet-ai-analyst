@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Match, AnalysisData, BetSession } from './types';
-import { fetchUpcomingMatches, analyzeMatch } from './services/geminiService';
+import { analyzeMatch } from './services/geminiService';
 import { getFixtures, isApiConfigured, getMatchStatistics } from './services/sportmonksService';
 import { MatchCard } from './components/MatchCard';
 import { AnalysisView } from './components/AnalysisView';
@@ -43,33 +43,22 @@ export default function App() {
   const loadMatches = async () => {
     setMatchesLoading(true);
     setMatches([]);
-    
-    let data: Match[] = [];
-    let isApiWorking = false;
-    
-    // Try to use API Football (Sportmonks now) first if configured
-    if (isApiConfigured()) {
-        try {
-            data = await getFixtures(mode === 'LIVE');
-            if (data.length > 0) {
-              isApiWorking = true;
-            } else {
-              // API returned 0 matches, but call succeeded. Could be empty schedule.
-              console.log("API returned 0 matches for this filter.");
-            }
-        } catch (e) {
-            console.error("API Fetch failed (Possible CORS or Rate Limit)", e);
-        }
-    }
 
-    // Fallback to Gemini if API not configured or failed/empty (to show something to user)
-    if (data.length === 0) {
-         setConnectionStatus('DEMO');
-         // If live and API configured but empty, it likely means NO live games right now.
-         // But we fetch fallback just to show "Something" for the user to see the UI.
-         data = await fetchUpcomingMatches();
-    } else {
-         setConnectionStatus('API');
+    let data: Match[] = [];
+
+    // Use ONLY Sportmonks API
+    try {
+        data = await getFixtures(mode === 'LIVE');
+        if (data.length > 0) {
+          setConnectionStatus('API');
+          console.log(`Loaded ${data.length} matches from Sportmonks API`);
+        } else {
+          setConnectionStatus('API');
+          console.log("API returned 0 matches for this filter.");
+        }
+    } catch (e) {
+        console.error("Sportmonks API Error:", e);
+        setConnectionStatus('DEMO');
     }
 
     setMatches(data);

@@ -22,14 +22,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { endpoint, includes } = req.query;
+    const { endpoint, includes, filters } = req.query;
 
     if (!endpoint || typeof endpoint !== 'string') {
       return res.status(400).json({ error: 'Missing endpoint parameter' });
     }
 
     const includesParam = includes ? `&include=${includes}` : '';
-    const url = `${BASE_URL}/${endpoint}?api_token=${API_TOKEN}${includesParam}`;
+    const filtersParam = filters ? `&filters=${filters}` : '';
+    const url = `${BASE_URL}/${endpoint}?api_token=${API_TOKEN}${includesParam}${filtersParam}`;
 
     const response = await fetch(url);
     const data = await response.json();

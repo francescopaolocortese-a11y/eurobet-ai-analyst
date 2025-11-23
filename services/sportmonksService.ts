@@ -14,66 +14,76 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
   if (!isApiConfigured()) return [];
 
   try {
+    // DEBUG: First, discover all available leagues with their IDs
+    console.log('🔍 Fetching all available leagues...');
+    const leaguesResponse = await fetch(`${API_BASE}?endpoint=leagues&includes=country`);
+    const leaguesData = await leaguesResponse.json();
+
+    const allLeaguesMap = new Map<number, { name: string; country: string }>();
+    if (leaguesData.data && Array.isArray(leaguesData.data)) {
+      leaguesData.data.forEach((league: any) => {
+        allLeaguesMap.set(league.id, {
+          name: league.name || 'Unknown',
+          country: league.country?.name || 'N/A'
+        });
+      });
+
+      // Filter for important European leagues
+      const importantLeagues = leaguesData.data.filter((league: any) => {
+        const name = league.name || '';
+        return ['Serie A', 'Premier League', 'La Liga', 'Bundesliga', 'Ligue 1', 'Champions League', 'Europa League', 'Conference League', 'Eredivisie', 'Liga Portugal', 'Championship']
+          .some(keyword => name.includes(keyword));
+      });
+
+      console.log('🏆 IMPORTANT LEAGUES WITH IDS:');
+      importantLeagues.forEach((l: any) => {
+        console.log(`   - ID: ${l.id} | ${l.name} (${l.country?.name || 'N/A'})`);
+      });
+      console.log(`📊 Total leagues available: ${leaguesData.data.length}`);
+    }
+
+    // Now fetch fixtures
     let endpoint;
     if (live) {
       endpoint = 'livescores';
     } else {
-      // Fetch fixtures for today with major European leagues filter
       const today = getFormattedDate(new Date());
       endpoint = `fixtures/date/${today}`;
     }
 
     // Include participants (teams), league+country, scores, state (status), and STATISTICS (for xG)
-    // IMPORTANT: 'league.country' is needed to filter by region
     const includes = 'participants;league.country;scores;state;statistics';
-
-    // DEBUG: Fetch all available leagues with country info to find correct IDs
-    const leaguesResponse = await fetch(`${API_BASE}?endpoint=leagues&includes=country`);
-    const leaguesData = await leaguesResponse.json();
-
-    if (leaguesData.data) {
-      const importantLeagues = leaguesData.data.filter((league: any) => {
-        const name = league.name || '';
-        return ['Serie A', 'Premier League', 'La Liga', 'Bundesliga', 'Ligue 1', 'Champions League', 'Europa League', 'Eredivisie', 'Liga Portugal']
-          .some(keyword => name.includes(keyword));
-      });
-      console.log('🏆 Available important leagues with IDs:', importantLeagues.slice(0, 15).map((l: any) => ({
-        id: l.id,
-        name: l.name,
-        country: l.country?.name || 'N/A'
-      })));
-    }
 
     const response = await fetch(`${API_BASE}?endpoint=${endpoint}&includes=${includes}`);
     const data = await response.json();
 
     if (!data.data) {
+      console.log('❌ No fixture data received from API');
       return [];
     }
 
-    // DEBUG: Log all leagues/countries to see what we're getting
-    const allLeagues = [...new Set(data.data.map((item: any) => item.league?.name))];
-    const allCountries = [...new Set(data.data.map((item: any) => item.league?.country?.name))];
-    console.log('All leagues in response:', allLeagues);
-    console.log('All countries in response:', allCountries);
-    console.log('Total fixtures from API:', data.data.length);
+    console.log(`📅 Total fixtures received: ${data.data.length}`);
 
-    // Comprehensive list of European countries to filter by
-    const europeanCountries = [
-        "Italy", "England", "Spain", "Germany", "France", "Netherlands", "Portugal",
-        "Belgium", "Scotland", "Turkey", "Austria", "Switzerland", "Greece",
-        "Denmark", "Sweden", "Norway", "Poland", "Czech Republic", "Croatia",
-        "Romania", "Serbia", "Ukraine", "Hungary", "Finland", "Ireland", "Slovakia",
-        "Bulgaria", "Slovenia", "Iceland", "Wales", "Northern Ireland", "Cyprus",
-        "Europe"  // Sportmonks uses "Europe" for UEFA competitions
-    ];
+    // DEBUG: Log all unique leagues and countries in the fixtures
+    const uniqueLeagues = new Map<string, { count: number; country: string; id?: number }>();
+    data.data.forEach((item: any) => {
+      const leagueName = item.league?.name || 'Unknown';
+      const country = item.league?.country?.name || 'N/A';
+      const leagueId = item.league_id;
 
-    // Priority Competitions (International) to always include
-    const internationalCompetitions = [
-        "Champions League", "Europa League", "Conference League",
-        "UEFA Champions League", "UEFA Europa League", "UEFA Conference League",
-        "UEFA Super Cup", "Euro Championship", "World Cup", "UEFA Nations League"
-    ];
+      if (uniqueLeagues.has(leagueName)) {
+        uniqueLeagues.get(leagueName)!.count++;
+      } else {
+        uniqueLeagues.set(leagueName, { count: 1, country, id: leagueId });
+      }
+    });
+
+    console.log('📋 LEAGUES IN TODAY\'S FIXTURES:');
+    Array.from(uniqueLeagues.entries())
+      .sort((a, b) => b[1].count - a[1].count)
+      .forEach(([name, info]) => {
+        console.log(`   - ${name} (${info.country}): ${info.count} matches [ID: ${info.id}]`);
+      });
 
     // TEMPORARILY: Show all matches to debug
     const filtered = data.data;

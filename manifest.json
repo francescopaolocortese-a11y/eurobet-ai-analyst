@@ -1,0 +1,22 @@
+{
+  "name": "EuroBet AI Analyst",
+  "short_name": "EuroBet AI",
+  "description": "Analisi scommesse calcio avanzata con AI e dati Live",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://ui-avatars.com/api/?name=EB&background=10b981&color=fff&size=192&rounded=true&bold=true",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://ui-avatars.com/api/?name=EB&background=10b981&color=fff&size=512&rounded=true&bold=true",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Match, AnalysisData, MatchStats } from "../types";
 
 // Initialize the Gemini client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
 
 interface ParsedData {
   score: string;
@@ -80,20 +80,20 @@ export const fetchUpcomingMatches = async (): Promise<Match[]> => {
       Non aggiungere altro testo prima o dopo.
     `;
 
-    const response = await ai.models.generateContent({
-      model,
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
-        temperature: 0.3, 
+    const model_instance = genAI.getGenerativeModel({ model });
+    const response = await model_instance.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.3,
       },
     });
 
-    const text = response.text || "";
-    const lines = text.split('\n').filter(l => l.includes('|'));
+    const result = await response.response;
+    const text = result.text() || "";
+    const lines = text.split('\n').filter((l: string) => l.includes('|'));
     
-    const matches: Match[] = lines.map((line, index) => {
-      const [league, home, away, time] = line.split('|').map(s => s.trim());
+    const matches: Match[] = lines.map((line: string, index: number) => {
+      const [league, home, away, time] = line.split('|').map((s: string) => s.trim());
       return {
         id: `match-${index}-${Date.now()}`,
         league: league || "Unknown League",
@@ -197,22 +197,17 @@ export const analyzeMatch = async (match: Match, isLive: boolean = false, stats?
     $$END_BLOCK$$
   `;
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: prompt,
-    config: {
-      tools: [{ googleSearch: {} }],
-    },
+  const model_instance = genAI.getGenerativeModel({ model });
+  const response = await model_instance.generateContent({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
   });
 
-  const text = response.text || "Analisi non disponibile al momento.";
+  const result = await response.response;
+  const text = result.text() || "Analisi non disponibile al momento.";
   const { cleanText, parsed } = parseAnalysisResponse(text);
-  
-  // Extract grounding metadata
-  const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  const urls = chunks
-    .filter(c => c.web?.uri && c.web?.title)
-    .map(c => ({ title: c.web!.title!, uri: c.web!.uri! }));
+
+  // Extract grounding metadata - not available in standard API
+  const urls: Array<{ title: string; uri: string }> = [];
 
   return {
     matchId: match.id,

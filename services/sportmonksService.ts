@@ -27,20 +27,20 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     // IMPORTANT: 'league.country' is needed to filter by region
     const includes = 'participants;league.country;scores;state;statistics';
 
-    // DEBUG: First, let's fetch all available leagues to find correct IDs
-    const leaguesResponse = await fetch(`${API_BASE}?endpoint=leagues`);
+    // DEBUG: Fetch all available leagues with country info to find correct IDs
+    const leaguesResponse = await fetch(`${API_BASE}?endpoint=leagues&includes=country`);
     const leaguesData = await leaguesResponse.json();
 
     if (leaguesData.data) {
-      const importantLeagues = leaguesData.data.filter((league: any) =>
-        ['Serie A', 'Premier League', 'La Liga', 'Bundesliga', 'Ligue 1', 'Champions League', 'Europa League'].some(name =>
-          league.name?.includes(name)
-        )
-      );
-      console.log('Available important leagues with IDs:', importantLeagues.map((l: any) => ({
+      const importantLeagues = leaguesData.data.filter((league: any) => {
+        const name = league.name || '';
+        return ['Serie A', 'Premier League', 'La Liga', 'Bundesliga', 'Ligue 1', 'Champions League', 'Europa League', 'Eredivisie', 'Liga Portugal']
+          .some(keyword => name.includes(keyword));
+      });
+      console.log('🏆 Available important leagues with IDs:', importantLeagues.slice(0, 15).map((l: any) => ({
         id: l.id,
         name: l.name,
-        country: l.country?.name
+        country: l.country?.name || 'N/A'
       })));
     }
 

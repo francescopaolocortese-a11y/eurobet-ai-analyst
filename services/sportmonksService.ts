@@ -36,6 +36,13 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
       return [];
     }
 
+    // DEBUG: Log all leagues/countries to see what we're getting
+    const allLeagues = [...new Set(data.data.map((item: any) => item.league?.name))];
+    const allCountries = [...new Set(data.data.map((item: any) => item.league?.country?.name))];
+    console.log('All leagues in response:', allLeagues);
+    console.log('All countries in response:', allCountries);
+    console.log('Total fixtures from API:', data.data.length);
+
     // Comprehensive list of European countries to filter by
     const europeanCountries = [
         "Italy", "England", "Spain", "Germany", "France", "Netherlands", "Portugal",

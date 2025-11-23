@@ -75,38 +75,79 @@ const getMockLogo = (teamName: string) =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName)}&background=random&color=fff&size=128&bold=true`;
 
 export const fetchUpcomingMatches = async (): Promise<Match[]> => {
-  // Return demo data immediately for now
-  console.log("fetchUpcomingMatches called - returning demo data");
+  console.log("fetchUpcomingMatches called - requesting Gemini for today's matches");
 
   try {
-    // Skipping Gemini call for now, go straight to demo data
-    throw new Error("Returning demo data");
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    const prompt = `
+      Cerca su Google le partite di calcio di oggi (${dateStr}) nei principali campionati europei (Serie A, Premier League, La Liga, Bundesliga, Ligue 1).
+
+      Per ogni partita trovata, restituisci ESATTAMENTE questo formato JSON (array di oggetti):
+
+      [
+        {
+          "id": "1",
+          "league": "Nome Campionato",
+          "homeTeam": "Squadra Casa",
+          "awayTeam": "Squadra Trasferta",
+          "time": "HH:MM",
+          "status": "scheduled"
+        }
+      ]
+
+      IMPORTANTE:
+      - Restituisci SOLO il JSON array, nessun altro testo
+      - Se non trovi partite, restituisci array vuoto []
+      - Usa status "scheduled" per partite non ancora iniziate
+      - Usa orario locale italiano (formato 24h)
+    `;
+
+    const text = await callGeminiAPI(prompt);
+
+    // Try to parse JSON response
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const matches = JSON.parse(jsonMatch[0]);
+
+      // Add mock logos to each match
+      return matches.map((m: any) => ({
+        ...m,
+        homeTeamLogo: getMockLogo(m.homeTeam),
+        awayTeamLogo: getMockLogo(m.awayTeam),
+        homeXg: 0.0,
+        awayXg: 0.0
+      }));
+    }
+
+    throw new Error("No valid JSON found in Gemini response");
 
   } catch (error) {
-    console.log("Showing demo data:", error);
-    // Fallback data with Mock Logos and Mock xG so the UI looks complete and features are visible
+    console.log("Gemini fetch failed, showing demo data:", error);
+    // Fallback data with Mock Logos
     return [
-      { 
+      {
           id: '1', league: 'Serie A', homeTeam: 'Inter', awayTeam: 'Juventus', time: '20:45', status: 'live', homeScore: 1, awayScore: 1, minute: "35",
           homeTeamLogo: getMockLogo('Inter'), awayTeamLogo: getMockLogo('Juventus'),
           homeXg: 0.85, awayXg: 0.92
       },
-      { 
+      {
           id: '2', league: 'Premier League', homeTeam: 'Liverpool', awayTeam: 'Man City', time: '17:30', status: 'finished', homeScore: 3, awayScore: 1,
           homeTeamLogo: getMockLogo('Liverpool'), awayTeamLogo: getMockLogo('Man City'),
           homeXg: 2.45, awayXg: 1.10
       },
-      { 
+      {
           id: '3', league: 'La Liga', homeTeam: 'Real Madrid', awayTeam: 'Barcelona', time: '21:00', status: 'scheduled',
           homeTeamLogo: getMockLogo('Real Madrid'), awayTeamLogo: getMockLogo('Barcelona'),
           homeXg: 0.0, awayXg: 0.0
       },
-      { 
+      {
           id: '4', league: 'Bundesliga', homeTeam: 'Bayern Munich', awayTeam: 'Dortmund', time: '18:30', status: 'live', homeScore: 2, awayScore: 2, minute: "68",
           homeTeamLogo: getMockLogo('Bayern Munich'), awayTeamLogo: getMockLogo('Dortmund'),
           homeXg: 2.80, awayXg: 2.15
       },
-      { 
+      {
           id: '5', league: 'Serie A', homeTeam: 'Napoli', awayTeam: 'Roma', time: '20:45', status: 'scheduled',
           homeTeamLogo: getMockLogo('Napoli'), awayTeamLogo: getMockLogo('Roma'),
           homeXg: 0.0, awayXg: 0.0

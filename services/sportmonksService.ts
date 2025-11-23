@@ -27,12 +27,24 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     // IMPORTANT: 'league.country' is needed to filter by region
     const includes = 'participants;league.country;scores;state;statistics';
 
-    // Filter for major European leagues (try common IDs)
-    // Serie A, Premier League, La Liga, Bundesliga, Ligue 1, Champions League, Europa League
-    const leagueIds = '2,8,140,78,61,2,3'; // Common league IDs for major competitions
-    const filters = `fixtureLeagues:${leagueIds}`;
+    // DEBUG: First, let's fetch all available leagues to find correct IDs
+    const leaguesResponse = await fetch(`${API_BASE}?endpoint=leagues`);
+    const leaguesData = await leaguesResponse.json();
 
-    const response = await fetch(`${API_BASE}?endpoint=${endpoint}&includes=${includes}&filters=${filters}`);
+    if (leaguesData.data) {
+      const importantLeagues = leaguesData.data.filter((league: any) =>
+        ['Serie A', 'Premier League', 'La Liga', 'Bundesliga', 'Ligue 1', 'Champions League', 'Europa League'].some(name =>
+          league.name?.includes(name)
+        )
+      );
+      console.log('Available important leagues with IDs:', importantLeagues.map((l: any) => ({
+        id: l.id,
+        name: l.name,
+        country: l.country?.name
+      })));
+    }
+
+    const response = await fetch(`${API_BASE}?endpoint=${endpoint}&includes=${includes}`);
     const data = await response.json();
 
     if (!data.data) {

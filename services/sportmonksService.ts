@@ -14,7 +14,16 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
   if (!isApiConfigured()) return [];
 
   try {
-    const endpoint = live ? 'livescores' : `fixtures/date/${getFormattedDate(new Date())}`;
+    let endpoint;
+    if (live) {
+      endpoint = 'livescores';
+    } else {
+      // Instead of just today, fetch fixtures from today to next 7 days
+      const today = new Date();
+      const nextWeek = new Date();
+      nextWeek.setDate(today.getDate() + 7);
+      endpoint = `fixtures/between/${getFormattedDate(today)}/${getFormattedDate(nextWeek)}`;
+    }
 
     // Include participants (teams), league+country, scores, state (status), and STATISTICS (for xG)
     // IMPORTANT: 'league.country' is needed to filter by region

@@ -18,11 +18,11 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     if (live) {
       endpoint = 'livescores';
     } else {
-      // Instead of just today, fetch fixtures from today to next 7 days
+      // Instead of just today, fetch fixtures from today to next 14 days
       const today = new Date();
-      const nextWeek = new Date();
-      nextWeek.setDate(today.getDate() + 7);
-      endpoint = `fixtures/between/${getFormattedDate(today)}/${getFormattedDate(nextWeek)}`;
+      const nextTwoWeeks = new Date();
+      nextTwoWeeks.setDate(today.getDate() + 14);
+      endpoint = `fixtures/between/${getFormattedDate(today)}/${getFormattedDate(nextTwoWeeks)}`;
     }
 
     // Include participants (teams), league+country, scores, state (status), and STATISTICS (for xG)
@@ -32,15 +32,7 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     const response = await fetch(`${API_BASE}?endpoint=${endpoint}&includes=${includes}`);
     const data = await response.json();
 
-    console.log('Sportmonks API Response:', {
-      endpoint,
-      totalMatches: data.data?.length || 0,
-      hasData: !!data.data,
-      error: data.error
-    });
-
     if (!data.data) {
-      console.warn('No data.data in response:', data);
       return [];
     }
 
@@ -61,13 +53,6 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
         "UEFA Super Cup", "Euro Championship", "World Cup", "UEFA Nations League"
     ];
 
-    // Log sample of countries/leagues to debug filtering
-    const sampleCountries = data.data.slice(0, 10).map((item: any) => ({
-      country: item.league?.country?.name,
-      league: item.league?.name
-    }));
-    console.log('Sample countries/leagues from API:', sampleCountries);
-
     const filtered = data.data.filter((item: any) => {
           if (live) return true; // Show all live matches regardless of league
 
@@ -80,8 +65,6 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
 
           return isEuropean || isInternational;
       });
-
-    console.log('Filtered European matches:', filtered.length);
 
     return filtered
       .map((item: any) => {

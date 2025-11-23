@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const API_TOKEN = process.env.SPORTMONKS_API_TOKEN || '';
 const BASE_URL = 'https://api.sportmonks.com/v3/football';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -14,6 +13,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).end();
     return;
   }
+
+  // Read environment variable inside the handler
+  const API_TOKEN = process.env.SPORTMONKS_API_TOKEN || '';
 
   if (!API_TOKEN) {
     return res.status(500).json({ error: 'API token not configured' });

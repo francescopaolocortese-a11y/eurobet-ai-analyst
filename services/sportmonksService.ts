@@ -59,6 +59,13 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
         "UEFA Super Cup", "Euro Championship", "World Cup", "UEFA Nations League"
     ];
 
+    // Log sample of countries/leagues to debug filtering
+    const sampleCountries = data.data.slice(0, 10).map((item: any) => ({
+      country: item.league?.country?.name,
+      league: item.league?.name
+    }));
+    console.log('Sample countries/leagues from API:', sampleCountries);
+
     const filtered = data.data.filter((item: any) => {
           if (live) return true; // Show all live matches regardless of league
 

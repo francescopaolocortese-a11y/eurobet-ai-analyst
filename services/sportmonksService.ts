@@ -50,11 +50,13 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
         "Belgium", "Scotland", "Turkey", "Austria", "Switzerland", "Greece",
         "Denmark", "Sweden", "Norway", "Poland", "Czech Republic", "Croatia",
         "Romania", "Serbia", "Ukraine", "Hungary", "Finland", "Ireland", "Slovakia",
-        "Bulgaria", "Slovenia", "Iceland", "Wales", "Northern Ireland", "Cyprus"
+        "Bulgaria", "Slovenia", "Iceland", "Wales", "Northern Ireland", "Cyprus",
+        "Europe"  // Sportmonks uses "Europe" for UEFA competitions
     ];
 
     // Priority Competitions (International) to always include
     const internationalCompetitions = [
+        "Champions League", "Europa League", "Conference League",
         "UEFA Champions League", "UEFA Europa League", "UEFA Conference League",
         "UEFA Super Cup", "Euro Championship", "World Cup", "UEFA Nations League"
     ];

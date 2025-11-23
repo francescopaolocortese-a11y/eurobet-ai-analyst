@@ -18,8 +18,7 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     if (live) {
       endpoint = 'livescores';
     } else {
-      // Try to fetch by specific league IDs for Serie A
-      // Serie A league ID is typically 384 in Sportmonks v3
+      // Fetch fixtures for today with major European leagues filter
       const today = getFormattedDate(new Date());
       endpoint = `fixtures/date/${today}`;
     }
@@ -28,7 +27,12 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     // IMPORTANT: 'league.country' is needed to filter by region
     const includes = 'participants;league.country;scores;state;statistics';
 
-    const response = await fetch(`${API_BASE}?endpoint=${endpoint}&includes=${includes}`);
+    // Filter for major European leagues (try common IDs)
+    // Serie A, Premier League, La Liga, Bundesliga, Ligue 1, Champions League, Europa League
+    const leagueIds = '2,8,140,78,61,2,3'; // Common league IDs for major competitions
+    const filters = `fixtureLeagues:${leagueIds}`;
+
+    const response = await fetch(`${API_BASE}?endpoint=${endpoint}&includes=${includes}&filters=${filters}`);
     const data = await response.json();
 
     if (!data.data) {

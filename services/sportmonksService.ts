@@ -23,7 +23,17 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
     const response = await fetch(`${API_BASE}?endpoint=${endpoint}&includes=${includes}`);
     const data = await response.json();
 
-    if (!data.data) return [];
+    console.log('Sportmonks API Response:', {
+      endpoint,
+      totalMatches: data.data?.length || 0,
+      hasData: !!data.data,
+      error: data.error
+    });
+
+    if (!data.data) {
+      console.warn('No data.data in response:', data);
+      return [];
+    }
 
     // Comprehensive list of European countries to filter by
     const europeanCountries = [
@@ -40,8 +50,7 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
         "UEFA Super Cup", "Euro Championship", "World Cup", "UEFA Nations League"
     ];
 
-    return data.data
-      .filter((item: any) => {
+    const filtered = data.data.filter((item: any) => {
           if (live) return true; // Show all live matches regardless of league
 
           const countryName = item.league?.country?.name;
@@ -52,7 +61,11 @@ export const getFixtures = async (live: boolean = false): Promise<Match[]> => {
           const isInternational = leagueName && internationalCompetitions.some(c => leagueName.includes(c));
 
           return isEuropean || isInternational;
-      })
+      });
+
+    console.log('Filtered European matches:', filtered.length);
+
+    return filtered
       .map((item: any) => {
         // Find home and away teams from participants array
         const homeParticipant = item.participants.find((p: any) => p.meta.location === 'home');
